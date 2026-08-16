@@ -71,7 +71,11 @@ export default function RootLayout({
       lang="fa"
       dir="rtl"
     >
-      <body>{children}</body>
+      <body>
+    <PWARegister />
+    <InstallPrompt />
+    {children}
+</body>
     </html>
   );
 }
