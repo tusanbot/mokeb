@@ -58,7 +58,7 @@ export default function Header() {
 
                     {/* Management Button */}
                     <a
-                        href="/login"
+                        href="/admin/login"
                         className="hidden shrink-0 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-dark)] md:flex"
                     >
                         <span>ورود مدیریت</span>
@@ -103,7 +103,7 @@ export default function Header() {
                             ))}
 
                             <a
-                                href="/login"
+                                href="/admin/login"
                                 className="mt-2 rounded-xl bg-[var(--primary)] px-4 py-3 text-center text-sm font-semibold text-white"
                             >
                                 ورود مدیریت
