@@ -9,9 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3",
+    "dayjs": "^1.11.22",
+    "jalaali-js": "^2.0.1",
+    "jalaliday": "^3.1.1",
+    "lucide-react": "^1.31.0",
     "next": "16.3.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-multi-date-picker": "^4.5.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
