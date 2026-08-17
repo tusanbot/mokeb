@@ -1,4 +1,4 @@
-const CACHE_NAME = "mokeb-khadem-alreza-v3";
+const CACHE_NAME = "mokeb-khadem-alreza-v4";
 
 const STATIC_ASSETS = [
     "/",
@@ -15,11 +15,7 @@ self.addEventListener("install", (event) => {
                 try {
                     await cache.add(asset);
                 } catch (error) {
-                    console.error(
-                        "Failed to cache:",
-                        asset,
-                        error
-                    );
+                    console.error("Failed to cache:", asset, error);
                 }
             }
         })
@@ -33,13 +29,8 @@ self.addEventListener("activate", (event) => {
         caches.keys().then((cacheNames) =>
             Promise.all(
                 cacheNames
-                    .filter(
-                        (name) =>
-                            name !== CACHE_NAME
-                    )
-                    .map((name) =>
-                        caches.delete(name)
-                    )
+                    .filter((name) => name !== CACHE_NAME)
+                    .map((name) => caches.delete(name))
             )
         )
     );
@@ -74,24 +65,17 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
         fetch(request)
             .then((response) => {
-                if (
-                    response.ok &&
-                    response.type === "basic"
-                ) {
+                if (response.ok && response.type === "basic") {
                     const clone = response.clone();
-
-                    caches.open(CACHE_NAME).then(
-                        (cache) => {
-                            cache.put(request, clone);
-                        }
-                    );
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(request, clone);
+                    });
                 }
 
                 return response;
             })
             .catch(async () => {
-                const cached =
-                    await caches.match(request);
+                const cached = await caches.match(request);
 
                 if (cached) {
                     return cached;
