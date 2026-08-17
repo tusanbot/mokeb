@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { HeartHandshake, Menu, X } from "lucide-react";
+import Image from "next/image";
+import { Menu, X } from "lucide-react";
 
 const navigation = [
     { label: "اهداف موکب", href: "#goals" },
@@ -22,10 +23,14 @@ export default function Header() {
                         className="flex min-w-0 items-center gap-3"
                         aria-label="موکب خادم الرضا"
                     >
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--gold)] bg-[var(--primary)] text-white shadow-sm">
-                            <HeartHandshake
-                                size={22}
-                                strokeWidth={1.8}
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--gold)] bg-[var(--primary)] p-0.5 shadow-sm">
+                            <Image
+                                src="/logo.png"
+                                alt="لوگوی موکب خادم الرضا(ع)"
+                                width={48}
+                                height={48}
+                                priority
+                                className="h-full w-full rounded-[10px] object-cover"
                             />
                         </div>
 
