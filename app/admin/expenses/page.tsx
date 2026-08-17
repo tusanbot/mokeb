@@ -4,6 +4,7 @@ import {
     ArrowUpRight,
     Plus,
     Receipt,
+    Target,
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
@@ -23,6 +24,43 @@ export default async function AdminExpensesPage() {
         });
 
     const items = expenses ?? [];
+
+    const expenseIds = items.map((expense) => expense.id);
+
+    const { data: transactions } =
+        expenseIds.length > 0
+            ? await supabase
+                .from("financial_transactions")
+                .select("expense_id, goal_id")
+                .in("expense_id", expenseIds)
+            : { data: [] };
+
+    const goalIds = Array.from(
+        new Set(
+            (transactions ?? [])
+                .map((transaction) => transaction.goal_id)
+                .filter(Boolean)
+        )
+    );
+
+    const { data: goals } =
+        goalIds.length > 0
+            ? await supabase
+                .from("goals")
+                .select("id, title")
+                .in("id", goalIds)
+            : { data: [] };
+
+    const transactionGoalMap = new Map(
+        (transactions ?? []).map((transaction) => [
+            transaction.expense_id,
+            transaction.goal_id,
+        ])
+    );
+
+    const goalMap = new Map(
+        (goals ?? []).map((goal) => [goal.id, goal.title])
+    );
 
     const totalExpenses = items.reduce(
         (sum, item) => sum + Number(item.amount ?? 0),
@@ -85,16 +123,12 @@ export default async function AdminExpensesPage() {
                 <section className="mb-8 grid gap-4 sm:grid-cols-2">
                     <SummaryCard
                         title="تعداد هزینه‌ها"
-                        value={items.length.toLocaleString(
-                            "fa-IR"
-                        )}
+                        value={items.length.toLocaleString("fa-IR")}
                     />
 
                     <SummaryCard
                         title="مجموع هزینه‌ها"
-                        value={`${formatMoney(
-                            totalExpenses
-                        )} تومان`}
+                        value={`${formatMoney(totalExpenses)} تومان`}
                     />
                 </section>
 
@@ -142,24 +176,24 @@ export default async function AdminExpensesPage() {
                         </div>
                     ) : (
                         <div className="divide-y divide-[var(--border)]">
-                            {items.map((expense) => (
-                                <ExpenseRow
-                                    key={expense.id}
-                                    category={
-                                        expense.category
-                                    }
-                                    amount={Number(
-                                        expense.amount
-                                    )}
-                                    description={
-                                        expense.description
-                                    }
-                                    date={expense.date}
-                                    formatMoney={
-                                        formatMoney
-                                    }
-                                />
-                            ))}
+                            {items.map((expense) => {
+                                const linkedGoalId = transactionGoalMap.get(expense.id);
+                                const linkedGoalTitle = linkedGoalId
+                                    ? goalMap.get(linkedGoalId)
+                                    : undefined;
+
+                                return (
+                                    <ExpenseRow
+                                        key={expense.id}
+                                        category={expense.category}
+                                        amount={Number(expense.amount)}
+                                        description={expense.description}
+                                        date={expense.date}
+                                        goalTitle={linkedGoalTitle}
+                                        formatMoney={formatMoney}
+                                    />
+                                );
+                            })}
                         </div>
                     )}
                 </section>
@@ -167,7 +201,6 @@ export default async function AdminExpensesPage() {
         </main>
     );
 }
-
 
 /* =========================================================
    Summary Card
@@ -193,7 +226,6 @@ function SummaryCard({
     );
 }
 
-
 /* =========================================================
    Expense Row
 ========================================================= */
@@ -203,12 +235,14 @@ function ExpenseRow({
     amount,
     description,
     date,
+    goalTitle,
     formatMoney,
 }: {
     category: string;
     amount: number;
     description: string;
     date: string;
+    goalTitle?: string;
     formatMoney: (value: number) => string;
 }) {
     return (
@@ -224,9 +258,15 @@ function ExpenseRow({
                     </h3>
 
                     <p className="mt-1 text-xs leading-6 text-[var(--muted)]">
-                        {description ||
-                            "بدون توضیحات"}
+                        {description || "بدون توضیحات"}
                     </p>
+
+                    {goalTitle && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--primary-light)] px-2.5 py-1 text-[11px] font-bold text-[var(--primary)]">
+                            <Target size={13} />
+                            هدف: {goalTitle}
+                        </div>
+                    )}
                 </div>
             </div>
 
