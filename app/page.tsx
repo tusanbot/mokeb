@@ -30,7 +30,7 @@ export default async function Home() {
     budget: Number(goal.budget),
     spent: Number(goal.spent),
     progress: Number(goal.progress),
-    status: goal.status,
+    status: goal.status as Goal["status"],
     subGoals: (goal.sub_goals ?? []).map((sub) => ({
       id: sub.id,
       title: sub.title,
