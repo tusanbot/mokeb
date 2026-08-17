@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
     ArrowLeft,
     HeartHandshake,
@@ -120,14 +121,17 @@ export default function Hero() {
                                 aria-hidden="true"
                             />
 
-                            {/* Center */}
+                            {/* Center Logo */}
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="text-center">
-                                    <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-[var(--gold)]/60 bg-[var(--gold)]/10 shadow-[0_0_80px_rgba(199,154,59,0.12)]">
-                                        <HeartHandshake
-                                            size={52}
-                                            strokeWidth={1.2}
-                                            className="text-[var(--gold)]"
+                                    <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-[2rem] border-2 border-[var(--gold)]/60 bg-[var(--gold)]/10 p-1 shadow-[0_0_80px_rgba(199,154,59,0.18)] sm:h-36 sm:w-36">
+                                        <Image
+                                            src="/logo.png"
+                                            alt="لوگوی موکب خادم الرضا(ع)"
+                                            width={144}
+                                            height={144}
+                                            priority
+                                            className="h-full w-full rounded-[1.5rem] object-cover"
                                         />
                                     </div>
 
