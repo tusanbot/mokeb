@@ -59,13 +59,9 @@ export default function GoalForm({ mode, goalId, initial }: GoalFormProps) {
 
         const cleanTitle = title.trim();
         const goalBudget = Number(budget);
-        const goalSpent = Number(spent);
-        const goalProgress = Number(progress);
 
         if (!cleanTitle) return setError("عنوان هدف را وارد کنید.");
         if (!Number.isFinite(goalBudget) || goalBudget < 0) return setError("بودجه هدف نامعتبر است.");
-        if (!Number.isFinite(goalSpent) || goalSpent < 0) return setError("مبلغ هزینه‌شده نامعتبر است.");
-        if (!Number.isInteger(goalProgress) || goalProgress < 0 || goalProgress > 100) return setError("پیشرفت باید بین ۰ تا ۱۰۰ باشد.");
 
         const cleanedSubGoals = subGoals
             .filter((item) => item.title.trim())
@@ -96,8 +92,6 @@ export default function GoalForm({ mode, goalId, initial }: GoalFormProps) {
                         title: cleanTitle,
                         description: description.trim(),
                         budget: goalBudget,
-                        spent: goalSpent,
-                        progress: goalProgress,
                         status,
                     })
                     .select("id")
@@ -108,14 +102,14 @@ export default function GoalForm({ mode, goalId, initial }: GoalFormProps) {
             } else {
                 if (!currentGoalId) throw new Error("شناسه هدف مشخص نیست.");
 
+                // spent و progress مالی عمداً اینجا تغییر داده نمی‌شوند.
+                // این دو مقدار توسط تراکنش‌های هزینه و trigger دیتابیس محاسبه می‌شوند.
                 const { error } = await supabase
                     .from("goals")
                     .update({
                         title: cleanTitle,
                         description: description.trim(),
                         budget: goalBudget,
-                        spent: goalSpent,
-                        progress: goalProgress,
                         status,
                     })
                     .eq("id", currentGoalId);
@@ -177,8 +171,27 @@ export default function GoalForm({ mode, goalId, initial }: GoalFormProps) {
                         <div className="grid gap-5 sm:grid-cols-2">
                             <Field label="عنوان هدف" value={title} onChange={setTitle} placeholder="مثلاً: خدمت‌رسانی به زائران" className="sm:col-span-2" />
                             <Field label="بودجه هدف (تومان)" value={budget} onChange={setBudget} type="number" />
-                            <Field label="هزینه‌شده (تومان)" value={spent} onChange={setSpent} type="number" />
-                            <Field label="پیشرفت (۰ تا ۱۰۰)" value={progress} onChange={setProgress} type="number" min={0} max={100} />
+
+                            <div>
+                                <label className="mb-2 block text-sm font-bold text-[var(--primary-dark)]">هزینه‌شده (خودکار)</label>
+                                <input
+                                    type="text"
+                                    value={`${Number(spent).toLocaleString("fa-IR")} تومان`}
+                                    disabled
+                                    className="h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm text-[var(--muted)] outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm font-bold text-[var(--primary-dark)]">پیشرفت مالی (خودکار)</label>
+                                <input
+                                    type="text"
+                                    value={`${Number(progress).toLocaleString("fa-IR")}٪`}
+                                    disabled
+                                    className="h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm text-[var(--muted)] outline-none"
+                                />
+                            </div>
+
                             <div>
                                 <label className="mb-2 block text-sm font-bold text-[var(--primary-dark)]">وضعیت</label>
                                 <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm outline-none focus:border-[var(--primary)]">
@@ -187,6 +200,11 @@ export default function GoalForm({ mode, goalId, initial }: GoalFormProps) {
                                     <option value="completed">تکمیل شده</option>
                                 </select>
                             </div>
+
+                            <div className="rounded-2xl border border-[var(--primary)]/15 bg-[var(--primary-light)] p-4 text-xs leading-6 text-[var(--primary-dark)] sm:col-span-2">
+                                هزینه‌شده و پیشرفت مالی این هدف از روی هزینه‌هایی که هنگام ثبت، به این هدف متصل می‌شوند محاسبه خواهد شد و نیازی به ورود دستی آنها نیست.
+                            </div>
+
                             <div className="sm:col-span-2">
                                 <label className="mb-2 block text-sm font-bold text-[var(--primary-dark)]">توضیحات</label>
                                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm leading-7 outline-none focus:border-[var(--primary)]" placeholder="توضیحات هدف..." />
