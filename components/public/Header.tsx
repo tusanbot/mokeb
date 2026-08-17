@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Menu, X } from "lucide-react";
 
 const navigation = [
@@ -17,19 +16,17 @@ export default function Header() {
         <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-white/95 backdrop-blur-md">
             <div className="container">
                 <div className="flex h-20 items-center justify-between gap-6">
-                    {/* Brand */}
                     <a
                         href="/"
                         className="flex min-w-0 items-center gap-3"
                         aria-label="موکب خادم الرضا"
                     >
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--gold)] bg-[var(--primary)] p-0.5 shadow-sm">
-                            <Image
+                            <img
                                 src="/logo.png"
                                 alt="لوگوی موکب خادم الرضا(ع)"
-                                width={48}
-                                height={48}
-                                priority
+                                width="48"
+                                height="48"
                                 className="h-full w-full rounded-[10px] object-cover"
                             />
                         </div>
@@ -45,7 +42,6 @@ export default function Header() {
                         </div>
                     </a>
 
-                    {/* Desktop Navigation */}
                     <nav
                         className="hidden items-center gap-1 md:flex"
                         aria-label="منوی اصلی"
@@ -61,7 +57,6 @@ export default function Header() {
                         ))}
                     </nav>
 
-                    {/* Management Button */}
                     <a
                         href="/admin/login"
                         className="hidden shrink-0 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-dark)] md:flex"
@@ -69,33 +64,20 @@ export default function Header() {
                         <span>ورود مدیریت</span>
                     </a>
 
-                    {/* Mobile Menu Button */}
                     <button
                         type="button"
                         onClick={() => setIsMenuOpen((open) => !open)}
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--primary)] transition hover:bg-[var(--primary-light)] md:hidden"
-                        aria-label={
-                            isMenuOpen
-                                ? "بستن منو"
-                                : "باز کردن منو"
-                        }
+                        aria-label={isMenuOpen ? "بستن منو" : "باز کردن منو"}
                         aria-expanded={isMenuOpen}
                     >
-                        {isMenuOpen ? (
-                            <X size={22} />
-                        ) : (
-                            <Menu size={22} />
-                        )}
+                        {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
                     </button>
                 </div>
 
-                {/* Mobile Navigation */}
                 {isMenuOpen && (
                     <div className="border-t border-[var(--border)] py-4 md:hidden">
-                        <nav
-                            className="flex flex-col gap-1"
-                            aria-label="منوی موبایل"
-                        >
+                        <nav className="flex flex-col gap-1" aria-label="منوی موبایل">
                             {navigation.map((item) => (
                                 <a
                                     key={item.href}
