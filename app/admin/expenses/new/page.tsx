@@ -1,16 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import {
     ArrowRight,
     CalendarDays,
     Receipt,
     Save,
+    Target,
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import PersianDatePicker from "@/components/admin/PersianDatePicker";
+
+type Goal = {
+    id: string;
+    title: string;
+    budget: number;
+    spent: number;
+    status: "planning" | "active" | "completed";
+};
 
 export default function NewExpensePage() {
     const [category, setCategory] = useState("");
@@ -19,10 +28,44 @@ export default function NewExpensePage() {
     const [date, setDate] = useState(
         new Date().toISOString().split("T")[0]
     );
+    const [goalId, setGoalId] = useState("");
+    const [goals, setGoals] = useState<Goal[]>([]);
+    const [goalsLoading, setGoalsLoading] = useState(true);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+
+    useEffect(() => {
+        async function loadGoals() {
+            const supabase = createClient();
+
+            const { data, error: goalsError } = await supabase
+                .from("goals")
+                .select("id, title, budget, spent, status")
+                .in("status", ["planning", "active"])
+                .order("created_at", { ascending: false });
+
+            if (goalsError) {
+                console.error("GOALS LOAD ERROR:", goalsError);
+                setGoals([]);
+            } else {
+                setGoals(
+                    (data ?? []).map((goal) => ({
+                        id: goal.id,
+                        title: goal.title,
+                        budget: Number(goal.budget ?? 0),
+                        spent: Number(goal.spent ?? 0),
+                        status: goal.status,
+                    }))
+                );
+            }
+
+            setGoalsLoading(false);
+        }
+
+        loadGoals();
+    }, []);
 
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>
@@ -48,23 +91,22 @@ export default function NewExpensePage() {
             const supabase = createClient();
 
             const { error: rpcError } =
-                await supabase.rpc(
-                    "create_expense",
-                    {
-                        p_category:
-                            category.trim(),
-
-                        p_amount:
-                            Number(amount),
-
-                        p_description:
-                            description.trim(),
-
-                        p_date: date,
-                    }
-                );
+                await supabase.rpc("create_expense", {
+                    p_category: category.trim(),
+                    p_amount: Number(amount),
+                    p_description: description.trim(),
+                    p_date: date,
+                    p_goal_id: goalId || null,
+                });
 
             if (rpcError) {
+                console.error("CREATE EXPENSE RPC ERROR:", {
+                    message: rpcError.message,
+                    details: rpcError.details,
+                    hint: rpcError.hint,
+                    code: rpcError.code,
+                });
+
                 setError(
                     rpcError.message ||
                     "ثبت هزینه با خطا مواجه شد."
@@ -78,6 +120,7 @@ export default function NewExpensePage() {
             setCategory("");
             setAmount("");
             setDescription("");
+            setGoalId("");
             setDate(
                 new Date()
                     .toISOString()
@@ -93,6 +136,10 @@ export default function NewExpensePage() {
             setLoading(false);
         }
     }
+
+    const selectedGoal = goals.find(
+        (goal) => goal.id === goalId
+    );
 
     return (
         <main className="min-h-screen bg-[var(--background)]">
@@ -119,7 +166,7 @@ export default function NewExpensePage() {
                         </div>
 
                         <p className="mt-1 text-xs text-[var(--muted)]">
-                            ثبت هزینه و کسر خودکار آن از موجودی موکب
+                            ثبت هزینه، کسر از موجودی و در صورت نیاز اتصال به هدف
                         </p>
                     </div>
                 </div>
@@ -157,8 +204,7 @@ export default function NewExpensePage() {
                                     value={category}
                                     onChange={(event) =>
                                         setCategory(
-                                            event.target
-                                                .value
+                                            event.target.value
                                         )
                                     }
                                     placeholder="مثلاً: مواد غذایی، حمل‌ونقل، تجهیزات"
@@ -181,13 +227,9 @@ export default function NewExpensePage() {
                                         type="number"
                                         min="1"
                                         value={amount}
-                                        onChange={(
-                                            event
-                                        ) =>
+                                        onChange={(event) =>
                                             setAmount(
-                                                event
-                                                    .target
-                                                    .value
+                                                event.target.value
                                             )
                                         }
                                         placeholder="مثلاً 300000"
@@ -198,6 +240,66 @@ export default function NewExpensePage() {
                                         تومان
                                     </span>
                                 </div>
+                            </div>
+
+                            {/* Goal */}
+                            <div>
+                                <label
+                                    htmlFor="goal"
+                                    className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--primary-dark)]"
+                                >
+                                    <Target
+                                        size={17}
+                                        className="text-[var(--primary)]"
+                                    />
+                                    مربوط به هدف
+                                    <span className="text-xs font-normal text-[var(--muted)]">
+                                        (اختیاری)
+                                    </span>
+                                </label>
+
+                                <select
+                                    id="goal"
+                                    value={goalId}
+                                    onChange={(event) =>
+                                        setGoalId(event.target.value)
+                                    }
+                                    disabled={goalsLoading}
+                                    className="h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/10 disabled:cursor-wait disabled:opacity-60"
+                                >
+                                    <option value="">
+                                        {goalsLoading
+                                            ? "در حال دریافت اهداف..."
+                                            : goals.length === 0
+                                                ? "هدفی برای اتصال وجود ندارد"
+                                                : "بدون اتصال به هدف"}
+                                    </option>
+
+                                    {goals.map((goal) => (
+                                        <option
+                                            key={goal.id}
+                                            value={goal.id}
+                                        >
+                                            {goal.title} — بودجه: {goal.budget.toLocaleString("fa-IR")} تومان
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {selectedGoal && (
+                                    <div className="mt-3 rounded-2xl border border-[var(--primary)]/15 bg-[var(--primary-light)] p-4 text-xs leading-6 text-[var(--primary-dark)]">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="font-bold">
+                                                {selectedGoal.title}
+                                            </span>
+                                            <span className="font-bold text-[var(--primary)]">
+                                                {selectedGoal.spent.toLocaleString("fa-IR")} از {selectedGoal.budget.toLocaleString("fa-IR")} تومان
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-[var(--muted)]">
+                                            پس از ثبت این هزینه، مبلغ هزینه‌شده و پیشرفت مالی هدف به‌صورت خودکار به‌روزرسانی می‌شود.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Description */}
@@ -217,8 +319,7 @@ export default function NewExpensePage() {
                                     value={description}
                                     onChange={(event) =>
                                         setDescription(
-                                            event.target
-                                                .value
+                                            event.target.value
                                         )
                                     }
                                     rows={4}
@@ -246,10 +347,7 @@ export default function NewExpensePage() {
 
                             {/* Warning */}
                             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-6 text-amber-800">
-                                مبلغ هزینه مستقیماً از موجودی نقدی
-                                موکب کسر خواهد شد. در صورتی که
-                                موجودی کافی نباشد، هزینه ثبت
-                                نمی‌شود.
+                                مبلغ هزینه مستقیماً از موجودی نقدی موکب کسر خواهد شد. در صورتی که موجودی کافی نباشد، هزینه ثبت نمی‌شود.
                             </div>
                         </div>
                     </section>
@@ -270,8 +368,8 @@ export default function NewExpensePage() {
                             role="status"
                             className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-700"
                         >
-                            هزینه با موفقیت ثبت شد و مبلغ آن
-                            از موجودی موکب کسر شد.
+                            هزینه با موفقیت ثبت شد و مبلغ آن از موجودی موکب کسر شد.
+                            {goalId && " مبلغ هزینه‌شده و پیشرفت مالی هدف نیز به‌صورت خودکار به‌روزرسانی شد."}
                         </div>
                     )}
 
