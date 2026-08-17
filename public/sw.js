@@ -1,7 +1,11 @@
-const CACHE_NAME = "mokeb-khadem-alreza-v2";
+const CACHE_NAME = "mokeb-khadem-alreza-v3";
 
 const STATIC_ASSETS = [
     "/",
+    "/logo.png",
+    "/icons/icon-192.png",
+    "/icons/icon-512.png",
+    "/icons/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {
